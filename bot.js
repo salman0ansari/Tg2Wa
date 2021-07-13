@@ -130,11 +130,7 @@ bot.command('update', async (ctx) => {
 
 bot.on('sticker', async (ctx) => {
     try {
-    const { phone } = await User.findOne({ userid: JSON.stringify(ctx.chat.id) }).exec();
-    } catch (error) {
-        ctx.reply('Error')
-    }
-    
+    const {phone} = await User.findOne({ userid: JSON.stringify(ctx.chat.id) }).exec();
     let { sticker } = await ctx.message
     if (sticker.is_animated) {
         ctx.reply('Sorry currently i dont support animated sticker')
@@ -143,6 +139,9 @@ bot.on('sticker', async (ctx) => {
     let { file_id } = await ctx.telegram.getFile(stickerId)
     let { href } = await ctx.telegram.getFileLink(file_id);
     wa.sendSticker(phone, href)
+    } catch (error) {
+        ctx.reply('Error: Run /setup again')
+    }  
 })
 
 bot.command('help', async (ctx) => {
@@ -151,4 +150,3 @@ bot.command('help', async (ctx) => {
 
 // bot.command('/ban
 bot.launch();
-
