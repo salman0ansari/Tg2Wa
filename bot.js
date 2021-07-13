@@ -129,7 +129,12 @@ bot.command('update', async (ctx) => {
 })
 
 bot.on('sticker', async (ctx) => {
-    const { userid, name, phone } = await User.findOne({ userid: JSON.stringify(ctx.chat.id) }).exec();
+    try {
+    const { phone } = await User.findOne({ userid: JSON.stringify(ctx.chat.id) }).exec();
+    } catch (error) {
+        ctx.reply('Error')
+    }
+    
     let { sticker } = await ctx.message
     if (sticker.is_animated) {
         ctx.reply('Sorry currently i dont support animated sticker')
