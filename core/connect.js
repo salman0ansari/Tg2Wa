@@ -18,10 +18,10 @@ exports.connect = async () => {
         console.log('Scan the QR code above.')
         qrcode.generate(qr, { small: true });
     })
-    fs.existsSync('./userData.json') && conn.loadAuthInfo('./userData.json')
+    fs.existsSync('./session_data.json') && conn.loadAuthInfo('./session_data.json')
 
     await conn.connect({ timeoutMs: 3*1000 })
-    fs.writeFileSync('./userData.json', JSON.stringify(conn.base64EncodedAuthInfo(), null, '\t'))
+    fs.writeFileSync('./session_data.json', JSON.stringify(conn.base64EncodedAuthInfo(), null, '\t'))
     console.log('='.repeat(50))
     console.log(`| + WA Version: ${conn.user.phone.wa_version}`)
     console.log(`| + Device: ${conn.user.phone.device_manufacturer}`)
