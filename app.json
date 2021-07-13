@@ -1,0 +1,28 @@
+{
+    "name": "Tg2Wa",
+    "description": "A simple bot with which can send sticker from telegram to whatsapp.",
+    "keywords": [
+      "telegram",
+      "whatsapp",
+      "tg2wa"
+    ],
+    "success_url": "https://github.com/salman0ansari",
+    "repository": "https://github.com/salman0ansari/Tg2Wa.git",
+    "env": {
+      "BOT_TOKEN": {
+        "description": "Your bot token from @botfather, as a string."
+      },
+      "MONGO_URI": {
+        "description": "Your Mongo db URI"
+      },
+      "KEY":{
+        "description": "Invitation key for bot"
+      }
+    },
+    "formation": {
+      "worker": {
+        "quantity": 1,
+        "size": "free"
+      }
+    }
+  }
