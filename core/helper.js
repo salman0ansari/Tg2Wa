@@ -15,7 +15,10 @@ exports.sendSticker = function (jid, url) {
         jid + '@s.whatsapp.net',
         { url: url },
         MessageType.sticker, { mimetype: Mimetype.sticker }
-    )
+    ).then((result) => {
+        console.log('Sticker Sended')
+    })
+    .catch((err) => console.log('Error Sending Sticker'))
 }
 
 exports.sendImage = async(from, buffer, caption = "") => {
