@@ -148,7 +148,7 @@ bot.command('update', async (ctx) => {
         bot.on('message', async (ctx) => {
             const newNum = ctx.message.text
             if (!newNum.includes('+91') && !Number.isInteger(newNum)) {
-                await ctx.reply(`Not an Indian Number Or\nInvalid Format\ne.g. +919876543210 `);
+                return await ctx.reply(`Not an Indian Number Or\nInvalid Format\ne.g. +919876543210 `);
             }
             else {
                 await ctx.reply(`Updating...`);
