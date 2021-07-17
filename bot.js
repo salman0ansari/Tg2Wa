@@ -147,7 +147,8 @@ bot.command('update', async (ctx) => {
         await ctx.reply('Enter new number');
         bot.on('message', async (ctx) => {
             const newNum = ctx.message.text
-            if (!newNum.includes('+91') && !Number.isInteger(newNum)) {
+            try {
+                if (!newNum.includes('+91') && !Number.isInteger(newNum)) {
                 return await ctx.reply(`Not an Indian Number Or\nInvalid Format\ne.g. +919876543210 `);
             }
             else {
@@ -157,6 +158,10 @@ bot.command('update', async (ctx) => {
                 const updateNum = await User.findOneAndUpdate(filter, update);
                 await ctx.reply(`Updated Check Here: /me`);
             }
+            } catch (e) {
+                console.log(`Bot Blocked || Something Wrong`)
+            }
+            
         })
     } catch (e) {
         console.log(`Bot Blocked || Something Wrong`)
