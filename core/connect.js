@@ -1,50 +1,44 @@
 const {
-    WAConnection,
-    Browsers
-} = require('@adiwajshing/baileys')
-const fs = require('fs')
-const qrcode = require('qrcode-terminal')
-const Session = require("../Db/sessionModel");
-// const db = mongoose.connection
+  default: makeWASocket,
+  DisconnectReason,
+  makeInMemoryStore,
+  useSingleFileAuthState,
+} = require("@adiwajshing/baileys");
+const path = require("path");
+const P = require("pino");
 
-const conn = new WAConnection()
+// start a connection
+exports.makeWASocket = () => {
+  const store = makeInMemoryStore({});
+  
+  store?.readFromFile(path.join(__dirname, `/store.json`));
+  // save every 10s
+  setInterval(() => { store?.writeToFile(path.join(__dirname, `/store.json`))}, 10_000);
 
-exports.Whatsapp = conn
+  const msgRetryCounterMap = {};
 
-exports.connect = async () => {
-    // Custom browser
-    conn.browserDescription = Browsers.macOS('Chrome')
+  const { state, saveState } = useSingleFileAuthState(path.join(__dirname, `/skynet.json`))
 
-    let alreadyThere = await Session.findOne({ ID: 'PROD' }).exec();
-    if (alreadyThere) {
-        conn.loadAuthInfo(alreadyThere.session)
-        console.log("Loaded Session From DB")
-    } else {
-        conn.on('qr', async (qr) => {
-            console.log('Scan the QR code above.')
-            qrcode.generate(qr, { small: true });
+  const sock = makeWASocket({
+    printQRInTerminal: true,
+    auth: state,
+    logger: P({ level: "silent" }),
+    msgRetryCounterMap,
+  });
 
-            conn.on('open', async () => {
-                const authInfo = conn.base64EncodedAuthInfo()
-                let alreadyThere = await Session.findOne({ ID: 'PROD' }).exec();
-                if (alreadyThere) {
-                    const filter = { ID: 'PROD' }
-                    const update = { session: authInfo }
-                    const updateSession = await User.findOneAndUpdate(filter, update);
-                    console.log('Session Updated');
-                }
-                else {
-                    const addSession = await new Session({ ID: 'PROD', session: authInfo });
-                    addSession.save(function (err) {
-                        if (err) return handleError(err);
-                    });
-                }
+  store?.bind(sock.ev);
 
-            })
-        })
+  sock.ev.on("connection.update", (update) => {
+    const { connection, lastDisconnect } = update;
+    if (connection === "close") {
+      // reconnect if not logged out
+      if (lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut) { startSock() } 
+      else { console.log("Connection closed. You are logged out.")}
     }
-    await conn.connect({ timeoutMs: 3 * 1000 })
-    console.log(`| + WA Version: ${conn.user.phone.wa_version}`)
-    console.log(`| + Device: ${conn.user.phone.device_manufacturer}`)
-    return conn
-}
+    console.log("connection update", update);
+  });
+
+  sock.ev.on("creds.update", saveState);
+
+  return sock;
+};
