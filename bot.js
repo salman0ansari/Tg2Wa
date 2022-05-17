@@ -197,6 +197,11 @@ bot.on("sticker", async (ctx) => {
 
 bot.command("help", async (ctx) => {
   try {
+    let alreadyThere = await User.findOne({userid: JSON.stringify(ctx.chat.id),}).exec();
+    if (alreadyThere) {
+      return await ctx.reply(`Start \nUpdate Number /update\nInfo: /me \nKey:`);
+      
+    }
     await ctx.reply(
       `Start Setup: /setup \nUpdate Number /update\nInfo: /me \nKey:`
     );
