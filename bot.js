@@ -4,17 +4,18 @@ const connection = require("./core/connect");
 const { sendText, sendSticker } = require("./core/helper");
 const User = require("./db/userSchema");
 const connect = require("./db/connectMongo");
-const ADMIN = "306549960";
+const ADMIN = "306549960"; // Change this
 const rateLimit = require("telegraf-ratelimit");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const logger = require("pino")();
+const axios = require("axios");
 
-const sock = connection.makeWASocket();
+const sock = connection.startSock();
 
-// Set limit to 5 message per 5 seconds
+// Set limit to 3 message/hr
 const limitConfig = {
-  window: 3.6e+6, // 1hr milisecond
-  limit: 1, // 3 sticker allowed per hr
+  window: 3.6e6, // 1hr milisecond
+  limit: 3, // 3 sticker allowed per hr
   onLimitExceeded: async (ctx, next) => {
     try {
       await ctx.reply("rate limit exceeded deleting...");
@@ -183,7 +184,7 @@ bot.on("sticker", async (ctx) => {
     }).exec();
     let { sticker } = await ctx.message;
     if (sticker.is_animated) {
-      return await ctx.reply("animated sticker is not supported");
+      return await ctx.reply("animated(tgs) stickers not supported");
     } else {
       let stickerId = await sticker.file_id;
       let { file_id } = await ctx.telegram.getFile(stickerId);
@@ -191,20 +192,54 @@ bot.on("sticker", async (ctx) => {
       await sendSticker(sock, phone, href);
     }
   } catch (e) {
+    console.log(e);
     logger.error(`Bot Blocked || Something Wrong`);
   }
 });
 
 bot.command("help", async (ctx) => {
   try {
-    let alreadyThere = await User.findOne({userid: JSON.stringify(ctx.chat.id),}).exec();
+    let alreadyThere = await User.findOne({
+      userid: JSON.stringify(ctx.chat.id),
+    }).exec();
     if (alreadyThere) {
-      return await ctx.reply(`Start \nUpdate Number /update\nInfo: /me \nKey:`);
-      
+      return await ctx.reply(`Update Number /update\nInfo: /me \nKey:`);
     }
     await ctx.reply(
       `Start Setup: /setup \nUpdate Number /update\nInfo: /me \nKey:`
     );
+  } catch (error) {
+    logger.error(`Bot Blocked || Something Wrong`);
+  }
+});
+
+bot.command("sendpack", async (ctx) => {
+  try {
+    const { phone } = await User.findOne({
+      userid: JSON.stringify(ctx.chat.id),
+    }).exec();
+    let pack = "";
+    let packName = ctx.message.text.split("/").pop();
+    try {
+      pack = await ctx.telegram.getStickerSet(packName);
+    } catch (e) {
+      return await ctx.reply(
+        "Invalid Pack Name\nE.g https://t.me/addstickers/Actualiteit\nDon't try tosend animated(tgs) sticker pack."
+      );
+    }
+    let links = await Promise.all(
+      pack.stickers.map(async (item, index) => {
+        let { file_id } = await ctx.telegram.getFile(item.file_id);
+        let { href } = await ctx.telegram.getFileLink(file_id);
+        return Promise.resolve(href);
+      })
+    );
+
+    for (let i = 0; i < links.length; i++) {
+      setTimeout(async () => {
+        await sendSticker(sock, phone, links[i]);
+      }, i * 3000); // 3000 milliseconds = 3 seconds
+    }
   } catch (error) {
     logger.error(`Bot Blocked || Something Wrong`);
   }

@@ -8,7 +8,7 @@ const path = require("path");
 const P = require("pino");
 
 // start a connection
-exports.makeWASocket = () => {
+function startSock () {
   const store = makeInMemoryStore({});
   
   store?.readFromFile(path.join(__dirname, `/store.json`));
@@ -42,3 +42,6 @@ exports.makeWASocket = () => {
 
   return sock;
 };
+
+
+exports.startSock = startSock

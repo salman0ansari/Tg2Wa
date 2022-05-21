@@ -12,6 +12,7 @@
   "dependencies": {
     "@adiwajshing/baileys": "^4.1.0",
     "@adiwajshing/keyed-db": "^0.2.4",
+    "axios": "^0.27.2",
     "dotenv": "^16.0.1",
     "mongoose": "^5.13.2",
     "pino": "^7.11.0",
